@@ -1,0 +1,27 @@
+from pydantic import BaseModel, EmailStr, HttpUrl, ValidationError
+
+
+class User(BaseModel):
+    email: EmailStr
+    website: HttpUrl
+
+
+# Invalid email
+
+try:
+    User(email="joke", website="https://www.example.com")
+except ValidationError as e:
+    print(str(e))
+
+
+# Invalid URL
+try:
+    User(email="joe@example.com", website="joke")
+except ValidationError as e:
+    print(str(e))
+
+
+# Valid
+user = User(email="joe@example.com", website="https://www.example.com")
+# email='jdoe@example.com' website=HttpUrl('https://www.example.com', scheme='https', host='www.example.com', tld='com', host_type='domain')
+print(user)
