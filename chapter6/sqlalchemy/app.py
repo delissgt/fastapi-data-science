@@ -63,3 +63,8 @@ async def list_posts(
 
     return results
 
+
+# Query SELECT - get a object
+@app.get("/posts{id}", response_model=PostDB)
+async def get_post(post: PostDB = Depends(get_post_or_404)) -> PostDB:
+    return post
