@@ -1,4 +1,24 @@
+from typing import Optional
+from datetime import datetime
+
 import sqlalchemy
+from pydantic import BaseModel, Field
+
+
+class PostBase(BaseModel):
+    title: str
+    content: str
+    publication_date: datetime = Field(default_factory=datetime.now)
+
+
+class PostPartialUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+
+
+class PostCreate(PostBase):
+    id: int
+
 
 metadata = sqlalchemy.MetaData()  # create a metadata object
 
