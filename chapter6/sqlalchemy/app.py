@@ -47,3 +47,19 @@ async def create_post(post: PostCreate, database: Database = Depends(get_databas
     post_id = await database.execute(insert_query)
     post_db = await get_post_or_404(post_id, database)
     return post_db
+
+
+# Query SELECT  - list objects
+@app.get("/posts")
+async def list_posts(
+        pagination: Tuple[int, int] = Depends(pagination),
+        database: Database = Depends(get_database),
+) -> List[PostDB]:
+    skip, limit = pagination
+    select_query = posts.select().offset(skip).limit(limit)
+    rows = await database.fetch_all(select_query)
+
+    results = [PostDB(**row) for row in rows]
+
+    return results
+
