@@ -30,7 +30,7 @@ async def pagination(skip: int = Query(0, ge=0), limit: int = Query(10, ge=0), )
 
 # GET OR 404
 async def get_post_or_404(id: int, database: Database = Depends(get_database)) -> PostDB:
-    select_query = posts.select().where(posts.c.id == id)
+    select_query = posts.select().where(posts.c.id == id)  # posts.c.id --> c = column
     raw_post = await database.fetch_one(select_query)
 
     if raw_post is None:
@@ -65,6 +65,34 @@ async def list_posts(
 
 
 # Query SELECT - get a object
-@app.get("/posts{id}", response_model=PostDB)
+@app.get("/posts/{id}", response_model=PostDB)
 async def get_post(post: PostDB = Depends(get_post_or_404)) -> PostDB:
     return post
+
+
+# Query UPDATE
+@app.patch("/posts/{id}", response_model=PostDB)
+async def update_post(
+        post_update: PostPartialUpdate,
+        post: PostDB = Depends(get_post_or_404),
+        database: Database = Depends(get_database),
+) -> PostDB:
+    update_query = (
+        posts.update()
+        .where(posts.c.id == post.id)
+        .values(post_update.model_dump(exclude_unset=True))  # exclude_unset --> only get the values to update
+    )
+    post_id = await database.execute(update_query)
+    post_db = await get_post_or_404(post_id, database)
+
+    return post_db
+
+
+# Query DELETE
+@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_post(
+        post: PostDB = Depends(get_post_or_404),
+        database: Database = Depends(get_database)
+):
+    delete_query = posts.delete().where(posts.c.id == post.id)
+    await database.execute(delete_query)
