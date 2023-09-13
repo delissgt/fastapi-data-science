@@ -1,10 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, status, Depends, HTTPException, Query
+from typing import List, Tuple
+
+from databases import Database
 
 from chapter6.sqlalchemy.database import get_database, sqlalchemy_engine
-from chapter6.sqlalchemy.models import (metadata)
-
+from chapter6.sqlalchemy.models import (metadata, posts, PostDB, PostCreate, PostPartialUpdate)
 
 app = FastAPI()
+
 
 # on_event decorator allow us to trigger some useful logic when FastAPI starts or stops
 @app.on_event("startup")
@@ -16,3 +19,31 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     await get_database().disconnect()
+
+
+# ------
+# PAGINATION
+async def pagination(skip: int = Query(0, ge=0), limit: int = Query(10, ge=0), ) -> Tuple[int, int]:
+    capped_limit = min(100, limit)
+    return (skip, capped_limit)
+
+
+# GET OR 404
+async def get_post_or_404(id: int, database: Database = Depends(get_database)) -> PostDB:
+    select_query = posts.select().where(posts.c.id == id)
+    raw_post = await database.fetch_one(select_query)
+
+    if raw_post is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    return PostDB(**raw_post)
+
+
+# ------------
+# Query INSERT
+@app.post("/posts", response_model=PostDB, status_code=status.HTTP_201_CREATED)
+async def create_post(post: PostCreate, database: Database = Depends(get_database)) -> PostDB:
+    insert_query = posts.insert().values(post.model_dump())
+    post_id = await database.execute(insert_query)
+    post_db = await get_post_or_404(post_id, database)
+    return post_db

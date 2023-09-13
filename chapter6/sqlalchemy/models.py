@@ -17,6 +17,10 @@ class PostPartialUpdate(BaseModel):
 
 
 class PostCreate(PostBase):
+    pass
+
+
+class PostDB(PostBase):
     id: int
 
 
