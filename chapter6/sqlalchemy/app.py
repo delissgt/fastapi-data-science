@@ -1,10 +1,11 @@
 from fastapi import FastAPI, status, Depends, HTTPException, Query
-from typing import List, Tuple
+from typing import List, Tuple, cast, Mapping
 
 from databases import Database
 
 from chapter6.sqlalchemy.database import get_database, sqlalchemy_engine
-from chapter6.sqlalchemy.models import (metadata, posts, PostDB, PostCreate, PostPartialUpdate)
+from chapter6.sqlalchemy.models import (metadata, posts, PostDB, PostCreate, PostPartialUpdate, CommentDB,
+                                        CommentCreate, comments, PostPublic)
 
 app = FastAPI()
 
@@ -36,7 +37,12 @@ async def get_post_or_404(id: int, database: Database = Depends(get_database)) -
     if raw_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    return PostDB(**raw_post)
+    select_post_comments_query = comments.select().where(comments.c.post.id == id)
+    raw_comments = await database.fetch_all(select_post_comments_query)
+    comments_list = [CommentDB(**comment) for comment in raw_comments]
+
+    # return PostDB(**raw_post)
+    return PostPublic(**raw_post, comments=comments_list)
 
 
 # ------------
@@ -96,3 +102,22 @@ async def delete_post(
 ):
     delete_query = posts.delete().where(posts.c.id == post.id)
     await database.execute(delete_query)
+
+
+# Endpoint to CREATE a new comment
+@app.post("/comments", response_model=CommentDB, status_code=status.HTTP_201_CREATED)
+async def create_comment(comment: CommentCreate, database: Database = Depends(get_database)) -> CommentDB:
+    select_post_query = posts.select().where(posts.c.id == comment.post_id)
+    post = await database.fetch_one(select_post_query)
+
+    if post is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Post {id} does not exist")
+
+    insert_query = comments.insert().values(comment.model_dump())
+    comment_id = await database.execute(insert_query)
+
+    select_query = comments.select().where(comments.c.id == comment_id)
+
+    raw_comment = cast(Mapping, await database.fetch_one(select_query))
+
+    return CommentDB(**raw_comment)

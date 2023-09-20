@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 import sqlalchemy
@@ -24,6 +24,24 @@ class PostDB(PostBase):
     id: int
 
 
+class CommentBase(BaseModel):
+    post_id: int
+    publication_date: datetime = Field(default_factory=datetime.now)
+    content: str
+
+
+class CommentCreate(CommentBase):
+    pass
+
+
+class CommentDB(CommentBase):
+    id: int
+
+
+class PostPublic(PostDB):
+    comments: List[CommentDB]
+
+
 metadata = sqlalchemy.MetaData()  # create a metadata object
 
 # Define a table (name of the table, followed by the metadata object)
@@ -34,5 +52,17 @@ posts = sqlalchemy.Table(
     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
     sqlalchemy.Column("publication_date", sqlalchemy.DateTime(), nullable=False),
     sqlalchemy.Column("title", sqlalchemy.String(length=255), nullable=False),
+    sqlalchemy.Column("content", sqlalchemy.Text(), nullable=False),
+)
+
+
+# Table models which has a foreign key toward the "posts" table
+#  post_id column, which is of the ForeignKey type. Note that we can also specify the ON DELETE action.
+comments = sqlalchemy.table(
+    "comments",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
+    sqlalchemy.Column("post_id", sqlalchemy.ForeignKey("posts.id", ondelete="CASCADE"), nullable=False),
+    sqlalchemy.Column("publication_date", sqlalchemy.DateTime(), nullable=False),
     sqlalchemy.Column("content", sqlalchemy.Text(), nullable=False),
 )
