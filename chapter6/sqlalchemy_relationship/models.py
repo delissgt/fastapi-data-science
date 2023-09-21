@@ -58,7 +58,7 @@ posts = sqlalchemy.Table(
 
 # Table models which has a foreign key toward the "posts" table
 #  post_id column, which is of the ForeignKey type. Note that we can also specify the ON DELETE action.
-comments = sqlalchemy.table(
+comments = sqlalchemy.Table(
     "comments",
     metadata,
     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),

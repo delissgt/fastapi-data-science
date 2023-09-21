@@ -14,3 +14,6 @@ chapter 6
 installed packages
 
 ```pip install databases[sqlite]```
+
+used for generate migrations 
+```pip install alembic```
