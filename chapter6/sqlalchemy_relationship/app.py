@@ -3,8 +3,8 @@ from typing import List, Tuple, cast, Mapping
 
 from databases import Database
 
-from chapter6.sqlalchemy.database import get_database, sqlalchemy_engine
-from chapter6.sqlalchemy.models import (metadata, posts, PostDB, PostCreate, PostPartialUpdate, CommentDB,
+from sqlalchemy_relationship.database import get_database, sqlalchemy_engine
+from sqlalchemy_relationship.models import (metadata, posts, PostDB, PostCreate, PostPartialUpdate, CommentDB,
                                         CommentCreate, comments, PostPublic)
 
 app = FastAPI()
@@ -37,7 +37,7 @@ async def get_post_or_404(id: int, database: Database = Depends(get_database)) -
     if raw_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    select_post_comments_query = comments.select().where(comments.c.post.id == id)
+    select_post_comments_query = comments.select().where(comments.c.post_id == id)
     raw_comments = await database.fetch_all(select_post_comments_query)
     comments_list = [CommentDB(**comment) for comment in raw_comments]
 

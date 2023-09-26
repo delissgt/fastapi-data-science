@@ -3,7 +3,7 @@ import sqlalchemy
 from databases import Database
 
 
-DATABASE_URL = "sqlite://chapter6_sqlalchemy.db"  # set connection string.
+DATABASE_URL = "sqlite:///chapter6_sqlalchemy.db"  # set connection string.
 # Generally is database engine followed by authentication information and the hostname of database server.
 
 database = Database(DATABASE_URL)  # we instantiate a Database instance
