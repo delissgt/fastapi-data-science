@@ -31,3 +31,13 @@ run project directory chapter6/sqlalchemy_relationship
 ```
 uvicorn sqlalchemy_relationship.app:app
 ```
+
+library Aerich for make database migration system
+```
+pip install aerich
+```
+
+library for communicate asynchronously with MongoDB
+```
+pip install motor
+```

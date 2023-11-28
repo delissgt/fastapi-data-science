@@ -48,7 +48,7 @@ class PostDB(PostBase):
 class PostPublic(PostDB):
     comments: List[CommentDB]
 
-    @field_validator("comments", pre=True)
+    @field_validator("comments")
     def fetch_comments(cls, v):
         return list(v)
 
